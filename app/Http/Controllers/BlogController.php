@@ -17,7 +17,7 @@ class BlogController extends Controller
     public function index()
     {
         $blogs = Blog::latest()->paginate(10);
-        return view('blog.index', compact('blogs'));
+        return view('/blog/index', compact('blogs'));
     }
 
     /** 
@@ -27,7 +27,7 @@ class BlogController extends Controller
      */
     public function create()
     {
-        return view('blog.create');
+        return view('blog/create');
     }
 
 
@@ -71,10 +71,10 @@ class BlogController extends Controller
 
         if($blog){
             //redirect dengan pesan sukses
-            return redirect()->route('blog.index')->with(['success' => 'Data Berhasil Disimpan!']);
+            return redirect()->route('index')->with(['success' => 'Data Berhasil Disimpan!']);
         }else{
             //redirect dengan pesan error
-            return redirect()->route('blog.index')->with(['error' => 'Data Gagal Disimpan!']);
+            return redirect()->route('index')->with(['error' => 'Data Gagal Disimpan!']);
         }
     }
     /**
@@ -85,7 +85,8 @@ class BlogController extends Controller
      */
     public function edit(Blog $blog)
     {
-        return view('blog.edit', compact('blog'));
+        $blog = Blog::where('id', $blog)->first();
+        return view('blog/edit', compact('blog'));
     }
 
 
@@ -98,42 +99,19 @@ class BlogController extends Controller
      */
     public function update(Request $request, Blog $blog)
     {
-        $this->validate($request, [
-            'title'     => 'required',
-            'content'   => 'required'
-        ]);
-
-        //get data Blog by ID
-        $blog = Blog::findOrFail($blog->id);
-
-        if ($request->file('image') == "") {
-
-            $blog->update([
-                'title'     => $request->title,
-                'content'   => $request->content
-            ]);
-        } else {
-
-            //hapus old image
-            Storage::disk('public')->delete('public/blogs/' . $blog->image);
-
-            //upload new image
-            $image = $request->file('image');
-            $image->storeAs('public/blogs', $image->hashName());
-
-            $blog->update([
-                'image'     => $image->hashName(),
-                'title'     => $request->title,
-                'content'   => $request->content
-            ]);
+        $blog = Blog::find($id);
+        $blog->title = $request->title;
+        $blog->content = $request->content;
+        if($request->image == ''){
+            $blog->save();
+            return redirect('index')->with('status','Data Berhasil Di Ubah');
         }
+        else{
+            $blog->image = $request->image;
 
-        if ($blog) {
-            //redirect dengan pesan sukses
-            return redirect()->route('blog.index')->with(['success' => 'Data Berhasil Diupdate!']);
-        } else {
-            //redirect dengan pesan error
-            return redirect()->route('blog.index')->with(['error' => 'Data Gagal Diupdate!']);
+            $blog->save();
+            return redirect('index')->with('status','Data Berhasil Di Ubah');
+
         }
     }
     /**
@@ -150,10 +128,10 @@ class BlogController extends Controller
 
         if ($blog) {
             //redirect dengan pesan sukses
-            return redirect()->route('blog.index')->with(['success' => 'Data Berhasil Dihapus!']);
+            return redirect()->route('index')->with(['success' => 'Data Berhasil Dihapus!']);
         } else {
             //redirect dengan pesan error
-            return redirect()->route('blog.index')->with(['error' => 'Data Gagal Dihapus!']);
+            return redirect()->route('index')->with(['error' => 'Data Gagal Dihapus!']);
         }
     }
 }
